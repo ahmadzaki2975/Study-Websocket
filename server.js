@@ -15,15 +15,23 @@ app.get("/", (req, res) => {
 
 io.on("connection", (socket) => {
   const name = socket.handshake.query.name;
-  console.log(`${name} connected`);
+  console.log(`${name} joined, welcome! 🎉 `);
   //? Disconnect
   socket.on("disconnect", () => {
-    console.log(`${name} disconnected`);
+    console.log(`${name} left 😢`);
   });
   //? Wave
-  socket.on("wave", (name) => {
+  socket.on("wave", () => {
     console.log(`${name} waved 👋 `);
   })
+  //? Chat
+  socket.on("chat", (msg) => {
+    const time = new Date().toLocaleTimeString();
+    console.log(
+      `${name}(${time}): ${msg}
+      `
+    );
+  });
 });
 
 server.listen(5000, () => {
