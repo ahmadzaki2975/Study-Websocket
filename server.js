@@ -15,25 +15,48 @@ app.get("/", (req, res) => {
 
 io.on("connection", (socket) => {
   const name = socket.handshake.query.name;
-  console.log(`${name} joined, welcome! 🎉 `);
+  const team = socket.handshake.query.team;
+  let time = new Date().toLocaleTimeString();
+  console.log(`(${time}) ${name} from ${team} joined, welcome! 🎉 `);
+  socket.emit("message","connection established, your Id is " + socket.id)
+  socket.join(team);
   //? Disconnect
   socket.on("disconnect", () => {
-    console.log(`${name} left 😢`);
+    time = new Date().toLocaleTimeString();
+    console.log(`(${time}) ${name} has left 😢`);
   });
   //? Wave
   socket.on("wave", () => {
-    console.log(`${name} waved 👋 `);
+    time = new Date().toLocaleTimeString();
+    console.log(`(${time}) ${name} waved 👋 `);
   })
-  //? Chat
+  //? Global Chat
   socket.on("chat", (msg) => {
-    const time = new Date().toLocaleTimeString();
+    time = new Date().toLocaleTimeString();
     console.log(
-      `${name}(${time}): ${msg}
-      `
+      `(${time}) [All] ${name}: "${msg}"`
     );
+  });
+  //? Room Chat
+  socket.on("room-chat", (msg) => {
+    time = new Date().toLocaleTimeString();
+    console.log(
+      `(${time}) [${team}] ${name}: "${msg}"`
+    );
+    socket.to(team).emit("room-chat", msg);
+  });
+  //? Move
+  socket.on("move", (questionIndex) => {
+    time = new Date().toLocaleTimeString();
+    console.log(`(${time}) ${name} moved to question ${questionIndex}`);
+  })
+  //? Answer
+  socket.on("answer", (answer) => {
+    time = new Date().toLocaleTimeString();
+    console.log(`(${time}) ${name} answered ${answer}`);
   });
 });
 
-server.listen(5000, () => {
-  console.log("listening on http://localhost:5000");
+server.listen(8080, () => {
+  console.log("listening on http://localhost:8080");
 });
