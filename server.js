@@ -14,16 +14,25 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  const name = socket.handshake.query.name;
-  const team = socket.handshake.query.team;
+  let name;
+  let team;
   let time = new Date().toLocaleTimeString();
-  console.log(`(${time}) ${name} from ${team} joined, welcome! 🎉 `);
+  // console.log(`(${time}) Unauthenticated user connected`);
   socket.emit("message","connection established, your Id is " + socket.id)
-  socket.join(team);
+  //? Authentication
+  socket.on("auth", (data) => {
+    name = data.name;
+    team = data.team;
+    time = new Date().toLocaleTimeString();
+    console.log(`(${time}) Auth success, ${name} from ${team} has joined 🎉`);
+    socket.join(team);
+  });
   //? Disconnect
   socket.on("disconnect", () => {
     time = new Date().toLocaleTimeString();
-    console.log(`(${time}) ${name} has left 😢`);
+    if(name){
+      console.log(`(${time}) ${name} from ${team} has left 😢`);
+    }
   });
   //? Wave
   socket.on("wave", () => {
@@ -49,6 +58,7 @@ io.on("connection", (socket) => {
   socket.on("move", (questionIndex) => {
     time = new Date().toLocaleTimeString();
     console.log(`(${time}) ${name} moved to question ${questionIndex}`);
+    io.to(team).emit("move", { name, questionIndex });
   })
   //? Answer
   socket.on("answer", (answer) => {
